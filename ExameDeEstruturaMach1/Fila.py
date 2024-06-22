@@ -81,8 +81,9 @@ class AplicacaoFila:
         x = 50
         y = 200
         while atual:
-            self.canvas.create_rectangle(x, y, x + 50, y + 30, outline='black')
-            self.canvas.create_text(x + 25, y + 15, text=str(atual.dado))
+            cor = '#3498db'  # Cor do node
+            self.canvas.create_rectangle(x, y, x + 50, y + 30, outline='black', fill=cor)
+            self.canvas.create_text(x + 25, y + 15, text=str(atual.dado), fill='white')
             if atual.proximo:
                 self.canvas.create_line(x + 50, y + 15, x + 100, y + 15, arrow=tk.LAST)
             atual = atual.proximo
@@ -152,6 +153,3 @@ if __name__ == "__main__":
     root.title("Fila")
     app = AplicacaoFila(root)
     root.mainloop()
-
-
-## versão final sem interligação com a interface

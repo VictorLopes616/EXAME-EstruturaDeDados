@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import messagebox
 
 class No:
     def __init__(self, dado=None):
@@ -85,13 +85,16 @@ class AplicacaoListaLigada:
         atual = self.lista_ligada.cabeca
         x = 50
         y = 200
+        cor_index = 0
         while atual:
-            self.canvas.create_rectangle(x, y, x + 50, y + 30, outline='black')
+            cor = ['#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6']  # Lista de cores
+            self.canvas.create_rectangle(x, y, x + 50, y + 30, outline='black', fill=cor[cor_index])
             self.canvas.create_text(x + 25, y + 15, text=str(atual.dado))
             if atual.proximo:
                 self.canvas.create_line(x + 50, y + 15, x + 100, y + 15, arrow=tk.LAST)
             atual = atual.proximo
             x += 100
+            cor_index = (cor_index + 1) % len(cor)
 
     def inserir_no_inicio(self):
         dado = self.obter_dado_entrada()
