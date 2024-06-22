@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import font
 import subprocess
 
+
 # pegar o diretório atual do codigo
 dir_path = os.path.dirname(os.path.realpath(__file__))
 

@@ -143,3 +143,6 @@ if __name__ == "__main__":
     root.title("Lista Ligada Simples")
     app = AplicacaoListaLigada(root)
     root.mainloop()
+
+
+

@@ -268,3 +268,5 @@ class GrafoInterface:
 root = tk.Tk()
 app = GrafoInterface(root)
 root.mainloop()
+
+
