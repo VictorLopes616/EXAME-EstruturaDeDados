@@ -10,7 +10,7 @@ class Aresta:
 
     def get_peso(self):
         return self.peso
-
+ 
     def set_peso(self, peso):
         self.peso = peso
 
@@ -184,7 +184,7 @@ class GrafoInterface:
 
     def encontrar_vertice(self, item):
         for vertice in self.grafo.vertices:
-            if vertice.node_id in item:
+            if vertice.node_id in item or vertice.text_id in item:
                 return vertice.node_id
         return None
 

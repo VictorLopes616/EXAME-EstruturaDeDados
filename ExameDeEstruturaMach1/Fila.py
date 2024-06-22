@@ -1,179 +1,157 @@
 import tkinter as tk
 from tkinter import messagebox
-from tkinter import simpledialog
-import random
 
+class No:
+    def __init__(self, dado=None):
+        self.dado = dado
+        self.proximo = None
 
-class EstruturaFila:
-    def __init__(self, capacidade=10):
-        self.elementos = [None] * capacidade
-        self._tamanho = 0
+class Fila:
+    def __init__(self):
+        self.frente = None
+        self.fim = None
 
-    def esta_vazia(self):
-        return self._tamanho == 0
-
-    def enfileirar(self, elemento):
-        self.aumentar_capacidade()
-        if self._tamanho < len(self.elementos):
-            self.elementos[self._tamanho] = elemento
-            self._tamanho += 1
-
-    def aumentar_capacidade(self):
-        if self._tamanho == len(self.elementos):
-            self.elementos = self.elementos + [None] * len(self.elementos)
+    def enfileirar(self, dado):
+        novo_no = No(dado)
+        if self.fim is None:
+            self.frente = self.fim = novo_no
+        else:
+            self.fim.proximo = novo_no
+            self.fim = novo_no
 
     def desenfileirar(self):
-        if self.esta_vazia():
+        if self.frente is None:
             return None
-        elemento_removido = self.elementos[0]
-        for i in range(self._tamanho - 1):
-            self.elementos[i] = self.elementos[i + 1]
-        self.elementos[self._tamanho - 1] = None
-        self._tamanho -= 1
-        return elemento_removido
+        temp = self.frente
+        self.frente = temp.proximo
+        if self.frente is None:
+            self.fim = None
+        return temp.dado
 
-    def tamanho(self):
-        return self._tamanho
+    def limpar(self):
+        self.frente = self.fim = None
 
-    def elemento(self, posicao):
-        if posicao < 0 or posicao >= self._tamanho:
-            raise ValueError("Posição inválida")
-        return self.elementos[posicao]
+class AplicacaoFila:
+    def __init__(self, root):
+        self.fila = Fila()
+        self.canvas = tk.Canvas(root, width=600, height=400, bg='white', scrollregion=(0, 0, 2000, 400))
+        self.canvas.pack(fill=tk.BOTH, expand=True)
 
+        self.canvas.bind("<ButtonPress-1>", self.iniciar_scroll)
+        self.canvas.bind("<B1-Motion>", self.navegar_scroll)
 
-class NodeFila:
-    def __init__(self, texto, cor, pos_x, pos_y):
-        self.texto = texto
-        self.cor = cor
-        self.pos_x = pos_x
-        self.pos_y = pos_y
+        self.frame_controle = tk.Frame(root)
+        self.frame_controle.pack()
 
+        self.label_dado = tk.Label(self.frame_controle, text="Valor:")
+        self.label_dado.pack(side=tk.LEFT, padx=5)
+        self.entrada_dado = tk.Entry(self.frame_controle)
+        self.entrada_dado.pack(side=tk.LEFT, padx=5)
 
-class FilaInterface(tk.Tk):
-    def __init__(self):
-        super().__init__()
-        self.fila = EstruturaFila(10)
-        self.atendidos = []
+        self.btn_enfileirar = tk.Button(self.frame_controle, text="Enfileirar", command=self.enfileirar)
+        self.btn_enfileirar.pack(side=tk.LEFT, padx=5)
 
-        self.largura_quadrado = 50
-        self.altura_quadrado = 50
-        self.corredor_padding = 20
-        self.espacamento_vertical = 10
-        self.espacamento_horizontal = 10
+        self.btn_desenfileirar = tk.Button(self.frame_controle, text="Desenfileirar", command=self.desenfileirar)
+        self.btn_desenfileirar.pack(side=tk.LEFT, padx=5)
 
-        self.panel = tk.Canvas(self, bg="darkgray")
-        self.panel.pack(fill=tk.BOTH, expand=True)
+        self.btn_limpar = tk.Button(self.frame_controle, text="Limpar", command=self.limpar)
+        self.btn_limpar.pack(side=tk.LEFT, padx=5)
 
-        self.botao_adicionar = tk.Button(self, text="Adicionar Elemento", bg="green", fg="black",
-                                         command=self.adicionar_elemento)
-        self.botao_adicionar.pack(side=tk.TOP, padx=10, pady=10)
+        self.label_concatenado_entrada = tk.Label(root, text="Valores de Entrada:")
+        self.label_concatenado_entrada.pack()
+        self.entrada_concatenada = tk.Entry(root, state='readonly', width=80)
+        self.entrada_concatenada.pack()
 
-        self.botao_remover = tk.Button(self, text="Remover Elemento", bg="red", fg="black",
-                                       command=self.remover_elemento)
-        self.botao_remover.pack(side=tk.TOP, padx=10, pady=10)
+        self.label_concatenado_saida = tk.Label(root, text="Valores de Saída:")
+        self.label_concatenado_saida.pack()
+        self.saida_concatenada = tk.Entry(root, state='readonly', width=80)
+        self.saida_concatenada.pack()
 
-        self.title("Fila Visual")
-        self.geometry("800x600")
-        self.update()
-        self.bind("<Configure>", self.on_resize)
+        self.concatenado_entrada = ""
+        self.concatenado_saida = ""
 
-    def on_resize(self, event):
-        self.panel.config(scrollregion=self.panel.bbox("all"))
-        self.panel.delete("all")
-        self.desenhar()
+        self.label_status = tk.Label(root, text="", fg='blue')
+        self.label_status.pack()
 
-    def desenhar(self):
-        x = 100 + self.corredor_padding
-        y = 100
+        self.desenhar_fila()
 
-        self.panel.create_rectangle(x - self.corredor_padding, y - 5, x + self.largura_quadrado * 10, y + 5,
-                                    fill="gray")
-        self.panel.create_rectangle(x - self.corredor_padding, y + self.altura_quadrado + 5,
-                                    x + self.largura_quadrado * 10, y + self.altura_quadrado + 15, fill="gray")
+    def desenhar_fila(self):
+        self.canvas.delete('all')
+        atual = self.fila.frente
+        x = 50
+        y = 200
+        while atual:
+            self.canvas.create_rectangle(x, y, x + 50, y + 30, outline='black')
+            self.canvas.create_text(x + 25, y + 15, text=str(atual.dado))
+            if atual.proximo:
+                self.canvas.create_line(x + 50, y + 15, x + 100, y + 15, arrow=tk.LAST)
+            atual = atual.proximo
+            x += 100
 
-        for i in range(self.fila.tamanho()):
-            node = self.fila.elemento(i)
-            self.desenhar_no(node)
-
-        for i, node in enumerate(self.atendidos):
-            self.desenhar_no(node)
-
-    def desenhar_no(self, node):
-        self.panel.create_rectangle(node.pos_x, node.pos_y, node.pos_x + self.largura_quadrado,
-                                    node.pos_y + self.altura_quadrado, fill=node.cor, outline="black")
-        self.panel.create_text(node.pos_x + self.largura_quadrado // 2, node.pos_y + self.altura_quadrado // 2,
-                               text=node.texto, fill="white", font=("Arial", 20))
-
-    def adicionar_elemento(self):
-        texto = simpledialog.askstring("Input", "Digite o texto para o elemento:")
-        if texto:
-            cor = "#{:06x}".format(random.randint(0, 0xFFFFFF))
-            node = NodeFila(texto, cor, 800, 100)
-            self.fila.enfileirar(node)
-            self.animar_entrada_node(node)
-
-    def animar_entrada_node(self, node):
-        def move():
-            index_node = self.fila.elementos.index(node)
-            target_x = 100 + self.corredor_padding + index_node * (self.largura_quadrado + self.espacamento_horizontal)
-            if node.pos_x > target_x:
-                node.pos_x -= 5
-                self.panel.delete("all")
-                self.desenhar()
-                self.after(10, move)
+    def enfileirar(self):
+        dado = self.obter_dado_entrada()
+        if dado:
+            if self.concatenado_entrada:
+                self.concatenado_entrada += f", {dado}"
             else:
-                node.pos_x = target_x
-                self.panel.delete("all")
-                self.desenhar()
+                self.concatenado_entrada += dado
+            self.fila.enfileirar(dado)
+            self.atualizar_concatenado_entrada()
+            self.desenhar_fila()
 
-        move()
-
-    def remover_elemento(self):
-        if not self.fila.esta_vazia():
-            node = self.fila.desenfileirar()
-            self.animar_saida_node(node)
-
-    def animar_saida_node(self, node):
-        target_x = 50
-        target_y = 200 + len(self.atendidos) * (self.altura_quadrado + self.espacamento_vertical)
-
-        def move_out():
-            if node.pos_x > target_x:
-                node.pos_x -= 5
-            elif node.pos_y < target_y:
-                node.pos_y += 5
+    def desenfileirar(self):
+        dado = self.fila.desenfileirar()
+        if dado is not None:
+            self.label_status.config(text=f"Desenfileirado: {dado}")
+            if self.concatenado_saida:
+                self.concatenado_saida += f", {dado}"
             else:
-                self.atendidos.append(node)
-                self.animar_nodes_restantes()
-                return
+                self.concatenado_saida += dado
+            self.atualizar_concatenado_saida()
+            self.desenhar_fila()
+        else:
+            self.label_status.config(text="Fila vazia, nada para desenfileirar.", fg='red')
 
-            self.panel.delete("all")
-            self.desenhar()
-            self.after(10, move_out)
+    def limpar(self):
+        self.fila.limpar()
+        self.concatenado_entrada = ""
+        self.concatenado_saida = ""
+        self.atualizar_concatenado_entrada()
+        self.atualizar_concatenado_saida()
+        self.label_status.config(text="Fila limpa.", fg='blue')
+        self.desenhar_fila()
 
-        move_out()
+    def obter_dado_entrada(self):
+        dado_str = self.entrada_dado.get().strip()
+        if dado_str:
+            self.entrada_dado.delete(0, tk.END)
+            return dado_str
+        messagebox.showerror("Erro", "Digite um valor válido.")
+        return None
 
-    def animar_nodes_restantes(self):
-        def move_remaining():
-            all_moved = True
-            for i in range(self.fila.tamanho()):
-                node = self.fila.elemento(i)
-                target_x = 100 + self.corredor_padding + i * (self.largura_quadrado + self.espacamento_horizontal)
-                if node.pos_x > target_x:
-                    node.pos_x -= 5
-                    all_moved = False
-            self.panel.delete("all")
-            self.desenhar()
-            if not all_moved:
-                self.after(10, move_remaining)
+    def atualizar_concatenado_entrada(self):
+        self.entrada_concatenada.config(state='normal')
+        self.entrada_concatenada.delete(0, tk.END)
+        self.entrada_concatenada.insert(0, self.concatenado_entrada)
+        self.entrada_concatenada.config(state='readonly')
 
-        move_remaining()
+    def atualizar_concatenado_saida(self):
+        self.saida_concatenada.config(state='normal')
+        self.saida_concatenada.delete(0, tk.END)
+        self.saida_concatenada.insert(0, self.concatenado_saida)
+        self.saida_concatenada.config(state='readonly')
 
+    def iniciar_scroll(self, event):
+        self.canvas.scan_mark(event.x, event.y)
+
+    def navegar_scroll(self, event):
+        self.canvas.scan_dragto(event.x, event.y, gain=1)
 
 if __name__ == "__main__":
-    app = FilaInterface()
-    app.mainloop()
+    root = tk.Tk()
+    root.title("Fila")
+    app = AplicacaoFila(root)
+    root.mainloop()
 
 
-
-## versão final antes da fusão de codigo {VERIFICADO!!!}
+## versão final sem interligação com a interface
