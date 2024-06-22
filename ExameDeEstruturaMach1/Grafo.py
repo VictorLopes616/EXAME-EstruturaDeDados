@@ -126,22 +126,22 @@ class GrafoInterface:
         self.master = master
         self.master.title("Visualização de Grafo")
 
-        self.canvas = tk.Canvas(self.master, width=800, height=600, bg="white")
-        self.canvas.pack(fill=tk.BOTH, expand=True)
-
         self.frame = tk.Frame(self.master)
-        self.frame.pack()
+        self.frame.pack(side=tk.LEFT, fill=tk.Y)
+
+        self.canvas = tk.Canvas(self.master, width=800, height=600, bg="white")
+        self.canvas.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
 
         tk.Label(self.frame, text="Início:").grid(row=0, column=0)
         self.start_entry = tk.Entry(self.frame)
-        self.start_entry.grid(row=0, column=1)
+        self.start_entry.grid(row=1, column=0)
 
-        tk.Label(self.frame, text="Fim:").grid(row=0, column=2)
+        tk.Label(self.frame, text="Fim:").grid(row=2, column=0)
         self.end_entry = tk.Entry(self.frame)
-        self.end_entry.grid(row=0, column=3)
+        self.end_entry.grid(row=3, column=0)
 
         self.add_edge_button = tk.Button(self.frame, text="Adicionar Aresta", command=self.adicionar_aresta)
-        self.add_edge_button.grid(row=0, column=4)
+        self.add_edge_button.grid(row=4, column=0)
 
         self.grafo = Grafo()
         self.node_counter = 0
@@ -268,6 +268,3 @@ class GrafoInterface:
 root = tk.Tk()
 app = GrafoInterface(root)
 root.mainloop()
-
-
-## versão final antes da fusão de codigo {VERIFICADO!!!}
